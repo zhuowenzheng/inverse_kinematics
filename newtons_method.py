@@ -1,17 +1,15 @@
 import numpy as np
 from rosenbrock import f_objective, gradients, hessian
 
-
-def line_search(x0, x1, alpha_0, gamma, epsilon, iter_max=50, iter_max_LS=20):
+def newtons(x0, x1, alpha_0, gamma, epsilon, iter_max = 50, iter_maxLS = 20):
     for iter in range(iter_max):
-        # evaluate f and g at x = (x0,x1)^T
         f = f_objective(x0, x1)
         g = gradients(x0, x1)
-        p = -g
-        # line search
+        H = hessian(x0, x1)
+        p = -np.linalg.solve(H, g)
         a = alpha_0
         delta_x = np.zeros(2)
-        for i in range(iter_max_LS):
+        for iterLS in range(iter_maxLS):
             delta_x = a * p
             f1 = f_objective(x0 + delta_x[0], x1 + delta_x[1])
             if f1 < f:
@@ -21,6 +19,8 @@ def line_search(x0, x1, alpha_0, gamma, epsilon, iter_max=50, iter_max_LS=20):
         # step
         x0 += delta_x[0]
         x1 += delta_x[1]
+        print("iter = ", iter, "f = ", f, "x = ", x0, x1)
+# check convergence
         if np.linalg.norm(g) < epsilon:
             print("converged at ", iter)
             break
@@ -34,4 +34,4 @@ if __name__ == "__main__":
     gamma = 0.8
     x0 = -1
     x1 = 0
-    line_search(x0, x1, alpha, gamma, epsilon)
+    newtons(x0, x1, alpha, gamma, epsilon)
