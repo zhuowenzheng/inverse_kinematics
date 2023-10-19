@@ -1,28 +1,32 @@
 import numpy as np
-from rosenbrock import f_objective, gradients, hessian
+from rosenbrock import f_objective, gradients
 
-def grad(x0, x1 ,alpha,epsilon,iter_max = 50):
+def grad(x, alpha, epsilon, f_obj, grad, iter_max=50):
+    n = len(x)  # Get the dimension of the vector x
     for iter in range(iter_max):
-        # evaluate f and g at x = (x0,x1)^T
-        f = f_objective(x0, x1)
-        g = gradients(x0, x1)
+        # Evaluate the objective function and its gradient at the current point
+        f = f_obj(x)
+        g = grad(x)
         p = -g
-        # step
+        # Step
         delta_x = alpha * p
-        # update x
-        x0 = x0 + delta_x[0]
-        x1 = x1 + delta_x[1]
-        print("iter = ", iter, "f = ", f, "x = ", x0, x1)
-        # check convergence
+        # Update x
+        x += delta_x
+        if n == 1:
+            while x > np.pi:
+                x -= 2 * np.pi
+            while x < -np.pi:
+                x += 2 * np.pi
+        print("iter = ", iter, "f = ", f, "g =", g, "x = ", x)
+        # Check convergence
         if np.linalg.norm(g) < epsilon:
             print("converged at ", iter)
             break
-    # precison 6 digits behind the decimal point
-    print("x = ", round(x0, 6), round(x1, 6))
+    # Precision 6 digits behind the decimal point
+    print("x = ", np.round(x, 6))
 
 if __name__ == "__main__":
     epsilon = 1e-6
     alpha = 0.1
-    x0 = -1
-    x1 = 0
-    grad(x0, x1, alpha, epsilon)
+    init_x = np.array([-1.0, 0.0])
+    grad(init_x, alpha, epsilon, f_objective, gradients)

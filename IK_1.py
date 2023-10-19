@@ -22,8 +22,8 @@ def f(x, link = link):
                             [np.sin(theta), np.cos(theta)]])
     r = np.array([1, 0, 1])
     p = T @ R @ r
-
-    return np.array([0.5 * wtar * np.linalg.norm(p - ptar) ** 2 + 0.5 * wreg * theta ** 2])
+    delta_p = p - ptar
+    return np.array([0.5 * wtar * delta_p @ delta_p + 0.5 * wreg * pow(theta, 2)])
 
 def g(x, link = link):
     theta = x[0]
@@ -52,3 +52,4 @@ gamma = 0.5
 x = np.array([theta])
 
 BFGS(x, alpha, gamma, epsilon, f, g, iter_max=5)
+
