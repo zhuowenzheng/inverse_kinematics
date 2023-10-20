@@ -11,6 +11,8 @@ class Link:
         self.angle = 0.0
         self.angle_rest = 0.0
         self.mesh_mat = np.eye(4)
+        self.T = np.zeros((3, 3))
+        self.R = np.zeros((3, 3))
 
     def add_child(self, child):
         child.parent = self
@@ -46,3 +48,15 @@ class Link:
 
     def set_mesh_matrix(self, M):
         self.mesh_mat = M
+
+    def get_T(self):
+        return self.T
+
+    def get_R(self):
+        return self.R
+
+    def set_T(self, T):
+        self.T = T
+
+    def set_R(self, R):
+        self.R = R

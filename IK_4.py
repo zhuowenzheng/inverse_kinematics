@@ -63,7 +63,7 @@ p = np.dot(T_matrices[0], R_matrices[0][0])
 for i in range(1, 4):
     p = np.dot(p, T_matrices[i])
     p = np.dot(p, R_matrices[i][0])
-p = np.dot(p, r)
+p = np.dot(p, r)[:2].T
 print("p = ", p)
 
 p_prime_matrix = np.zeros((4, 3))
@@ -90,3 +90,65 @@ P_prime = create_P_prime(T_matrices, R_matrices, r, n)
 
 print("P' =\n", P_prime)
 
+
+def compute_entry(T_matrices, R_matrices, r, n, i, j):
+    product = T_matrices[0]
+    R_list = [R_matrices[k][0] for k in range(n)]
+
+    # Update the rotation matrix at the i-th and j-th positions
+    if i == j:
+        R_list[i] = R_matrices[i][2]
+    else:
+        R_list[i] = R_matrices[i][1]
+        R_list[j] = R_matrices[j][1]
+
+    # Compute the resultant matrix using the matrices in R_list
+    for k in range(n):
+        product = np.dot(product, R_list[k])
+        if k < n - 1:
+            product = np.dot(product, T_matrices[k + 1])
+
+    result = np.dot(product, r)[:2].T
+    return result
+
+
+def create_P_double_prime(T_matrices, R_matrices, r, n):
+    P_double_prime_matrix = np.zeros((2 * n, n))
+    for i in range(n):
+        for j in range(n):
+            entry = compute_entry(T_matrices, R_matrices, r, n, i, j)
+            P_double_prime_matrix[2 * i, j] = entry[0]
+            P_double_prime_matrix[2 * i + 1, j] = entry[1]
+    return P_double_prime_matrix
+
+
+P_double_prime = create_P_double_prime(T_matrices, R_matrices, r, n)
+print("P'' =\n", P_double_prime)
+
+ptar = np.array([3, 1])
+wtar = 1e3
+Wreg = np.array([0, 1e0, 1e0, 1e0])
+
+def f(x):
+    theta_vec = x[:n]
+    delta_p = p - ptar
+    Wreg_matrix = np.diag(Wreg)  # Convert Wreg to a diagonal matrix
+    return 0.5 * wtar * np.dot(delta_p, delta_p) + 0.5 * (theta_vec @ Wreg_matrix @ theta_vec)
+
+def g(x):
+    theta_vec = x[:n]
+    delta_p = p - ptar
+    Wreg_matrix = np.diag(Wreg)  # Convert Wreg to a diagonal matrix
+    return wtar * delta_p @ P_prime + Wreg_matrix @ theta_vec
+
+print("f(x) = ", f(theta_vec))
+print("g(x) = ", g(theta_vec))
+
+if __name__ == "__main__":
+    epsilon = 1e-6
+    alpha = 1.0
+    gamma = 0.5
+
+    result = BFGS(theta_vec, alpha, gamma, epsilon, f, g)
+
+    print("x = ", np.round(result, 6))
