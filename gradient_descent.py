@@ -12,11 +12,7 @@ def grad(x, alpha, epsilon, f_obj, grad, iter_max=50):
         delta_x = alpha * p
         # Update x
         x += delta_x
-        if n == 1:
-            while x > np.pi:
-                x -= 2 * np.pi
-            while x < -np.pi:
-                x += 2 * np.pi
+
         print("iter = ", iter, "f = ", f, "g =", g, "x = ", x)
         # Check convergence
         if np.linalg.norm(g) < epsilon:
@@ -24,7 +20,7 @@ def grad(x, alpha, epsilon, f_obj, grad, iter_max=50):
             break
     # Precision 6 digits behind the decimal point
     print("x = ", np.round(x, 6))
-
+    return x
 if __name__ == "__main__":
     epsilon = 1e-6
     alpha = 0.1

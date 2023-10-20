@@ -46,10 +46,18 @@ def g(x, link = link):
     return np.array([wtar * (p - ptar) @ p_prime + wreg * theta])
 
 
-epsilon = 1e-6
-alpha = 1.0
-gamma = 0.5
-x = np.array([theta])
+if __name__ == "__main__":
+    epsilon = 1e-6
+    alpha = 1.0
+    gamma = 0.5
+    x = np.array([theta])
 
-BFGS(x, alpha, gamma, epsilon, f, g, iter_max=5)
+    result = BFGS(x, alpha, gamma, epsilon, f, g, iter_max=5)
 
+    # wrapping
+    while result > np.pi:
+        result -= 2 * np.pi
+    while x < -np.pi:
+        result += 2 * np.pi
+
+    print("x = ", np.round(result, 6))

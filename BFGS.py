@@ -33,24 +33,19 @@ def BFGS(x, alpha_0, gamma, epsilon, f_obj, grad, iter_max=50, iter_maxLS=20):
                 break
             else:
                 a *= gamma  # Reduce the step size
-
+        print("alpha = ", a)
         # Update the current point and the previous values of x and g
         x_0 = x.copy()
         g_0 = g.copy()
         x += delta_x  # Take a step along the search direction
-        if n == 1:
-            while x > np.pi:
-                x -= 2 * np.pi
-            while x < -np.pi:
-                x += 2 * np.pi
+
         print("iter = ", iter, "f = ", f, "g =", g, "x = ", x)
         if np.linalg.norm(g) < epsilon:
             print("converged at ", iter)
             break
 
     # Print the final solution to a precision of 6 digits behind the decimal point
-    print("x = ", np.round(x, 5))
-
+    return x
 
 if __name__ == "__main__":
     epsilon = 1e-6
