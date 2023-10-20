@@ -2,11 +2,12 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 class Link:
-    def __init__(self):
+    def __init__(self, position=(1, 0)):
+        self.position = np.array([0, 0])
+        self.set_position(position[0], position[1])
         self.parent = None
         self.child = None
         self.depth = 0
-        self.position = np.array([0.0, 0.0])
         self.angle = 0.0
         self.angle_rest = 0.0
         self.mesh_mat = np.eye(4)

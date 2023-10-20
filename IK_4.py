@@ -5,32 +5,12 @@ from gradient_descent import grad
 from BFGS import BFGS
 from IK_1 import f, g
 
-# for root, t = (0, 0)
-root = Link()
-root.set_position(0, 0)
-root.set_angle(0)
-theta_0 = root.get_angle()
-# for other links, t = (1, 0)
-
-link1 = Link()
-link1.set_position(1, 0)
-theta_1 = link1.get_angle()
-
-link2 = Link()
-link2.set_position(1, 0)
-theta_2 = link2.get_angle()
-
-link3 = Link()
-link3.set_position(1, 0)
-theta_3 = link3.get_angle()
-
-theta_vec = np.array([theta_0, theta_1, theta_2, theta_3])
-
 def translation_matrix(link):
     T = np.eye(3)
     T[0, 2] = link.get_position()[0]
     T[1, 2] = link.get_position()[1]
     return T
+
 
 def create_rotation_matrices(link):
     theta = link.get_angle()
@@ -55,26 +35,58 @@ def create_rotation_matrices(link):
     return R, R_prime, R_double_prime
 
 
-matrices = [create_rotation_matrices(link) for link in [root, link1, link2, link3]]
+n = 4
 
-R0, R0_prime, R0_double_prime = matrices[0]
-R1, R1_prime, R1_double_prime = matrices[1]
-R2, R2_prime, R2_double_prime = matrices[2]
-R3, R3_prime, R3_double_prime = matrices[3]
+# Initialize the root link
+links = [Link((0, 0))]
 
-# print these matrices to check that they are correct
-print("R0 = ", R0)
-print("R0_prime = ", R0_prime)
-print("R0_double_prime = ", R0_double_prime)
-print("R1 = ", R1)
-print("R1_prime = ", R1_prime)
-print("R1_double_prime = ", R1_double_prime)
-print("R2 = ", R2)
-print("R2_prime = ", R2_prime)
-print("R2_double_prime = ", R2_double_prime)
-print("R3 = ", R3)
-print("R3_prime = ", R3_prime)
-print("R3_double_prime = ", R3_double_prime)
+# Create the rest of the links
+for _ in range(n - 1):
+    link = Link((1, 0))
+    link.set_angle(0)
+    links.append(link)
 
+print("len of links = ", len(links))
+print(links[0].get_position())
+print(links[1].get_position())
+# Gather all angles
+theta_vec = np.array([link.get_angle() for link in links])
+
+# Create translation and rotation matrices
+T_matrices = [translation_matrix(link) for link in links]
+R_matrices = [create_rotation_matrices(link) for link in links]
 
 r = np.array([1, 0, 1])
+
+# p = T0R0(theta)T1R1(theta)T2R2(theta)T3R3(theta)r
+p = np.dot(T_matrices[0], R_matrices[0][0])
+for i in range(1, 4):
+    p = np.dot(p, T_matrices[i])
+    p = np.dot(p, R_matrices[i][0])
+p = np.dot(p, r)
+print("p = ", p)
+
+p_prime_matrix = np.zeros((4, 3))
+
+# Compute p_prime for each joint
+def compute_p_prime(T_matrices, R_matrices, r, index, n):
+    product = T_matrices[0]
+    for i in range(n):
+        if i == index:
+            product = np.dot(product, R_matrices[i][1])  # Use the derivative of R
+        else:
+            product = np.dot(product, R_matrices[i][0])
+        product = np.dot(product, T_matrices[i + 1] if i < n - 1 else np.eye(3))
+    return np.dot(product, r)
+
+def create_P_prime(T_matrices, R_matrices, r, n):
+    P_list = [compute_p_prime(T_matrices, R_matrices, r, i, n) for i in range(n)]
+    P_prime_matrix = np.array([p[:2] for p in P_list]).T
+    return P_prime_matrix
+
+n = len(R_matrices)  # Assuming the length of R_matrices corresponds to the number of links.
+P_prime = create_P_prime(T_matrices, R_matrices, r, n)
+
+
+print("P' =\n", P_prime)
+
