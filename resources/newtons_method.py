@@ -1,7 +1,10 @@
+import sys
+
 import numpy as np
 from rosenbrock import f_objective, gradients, hessian
 
 def newtons(x, alpha_0, gamma, epsilon, f_obj, grad, hess, iter_max=50, iter_maxLS=20):
+    global iter
     n = len(x)  # Get the dimension of the vector x
 
     for iter in range(iter_max):
@@ -25,13 +28,25 @@ def newtons(x, alpha_0, gamma, epsilon, f_obj, grad, hess, iter_max=50, iter_max
         # print("iter = ", iter, "f = ", f, "x = ", x)
         # check convergence
         if np.linalg.norm(g) < epsilon:
-            print("NM converged at ", iter)
+            print("NM converged at ", iter + 1)
             break
-    return x
+    return x, iter + 1
 
 if __name__ == "__main__":
     epsilon = 1e-6
     alpha = 1
     gamma = 0.8
     init_x = np.array([-1.0, 0.0])
-    newtons(init_x, alpha, gamma, epsilon, f_objective, gradients, hessian)
+    result, iter_ = newtons(init_x, alpha, gamma, epsilon, f_objective, gradients, hessian)
+    result = np.round(result, 6)
+    print("x = ", result)
+
+    # Save the output to resources/outputA4.txt
+    resource_dir = sys.argv[1]
+    file_path = resource_dir + '/outputA4.txt'
+
+    with open(file_path, 'w') as file:
+        # Iterate through the array and write each element to the file
+        file.write(f'{iter_}\n')
+        for value in result:
+            file.write(f'{value}\n')

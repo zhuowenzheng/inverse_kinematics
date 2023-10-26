@@ -1,8 +1,10 @@
 import numpy as np
-from rosenbrock import f_objective, gradients, hessian
+from rosenbrock import f_objective, gradients
 
+import sys
 
 def BFGS(x, alpha_0, gamma, epsilon, f_obj, grad, iter_max=50, iter_maxLS=20):
+    global iter
     n = len(x)  # Get the dimension of the vector x
 
     A = np.eye(n)  # Initialize the Hessian approximation matrix to the identity matrix
@@ -44,16 +46,28 @@ def BFGS(x, alpha_0, gamma, epsilon, f_obj, grad, iter_max=50, iter_maxLS=20):
 
         # print("iter = ", iter, "f = ", f, "g =", g, "x = ", x)
         if np.linalg.norm(g) < epsilon:
-            print("BFGS converged at ", iter)
+            print("BFGS converged at ", iter + 1)
             break
 
     # Print the final solution to a precision of 6 digits behind the decimal point
-    return x
+    return x, iter + 1
 
 if __name__ == "__main__":
+
     epsilon = 1e-6
     alpha = 1
     gamma = 0.8
     init_x = np.array([-1.0, 0.0])
-    x = BFGS(init_x, alpha, gamma, epsilon, f_objective, gradients)
-    print("x = ", np.round(x, 6))
+    x, iter_ = BFGS(init_x, alpha, gamma, epsilon, f_objective, gradients)
+    x = np.round(x, 6)
+    print("x = ", x)
+
+    # Save the output to resources/outputA5.txt
+    resource_dir = sys.argv[1]
+    file_path = resource_dir + '/outputA5.txt'
+
+    with open(file_path, 'w') as file:
+        # Iterate through the array and write each element to the file
+        file.write(f'{iter_}\n')
+        for value in x:
+            file.write(f'{value}\n')

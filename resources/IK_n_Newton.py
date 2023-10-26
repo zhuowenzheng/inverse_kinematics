@@ -1,13 +1,13 @@
 # n-link with Newton
+import sys
+
 import numpy as np
 from Link import Link
-from gradient_descent import grad
 from BFGS import BFGS
 from newtons_method import newtons
 
 import matplotlib.pyplot as plt
 from matplotlib import collections as mc
-
 
 def translation_matrix(link):
     T = np.eye(3)
@@ -156,10 +156,8 @@ def h(x):
 
     P_double_prime = create_P_double_prime(T_matrices, R_matrices, r, n)
 
-    print("P'' =\n", P_double_prime)
-    print("P' =\n", P_prime)
     delta_p = (p - ptar)[:2]
-    print("delta_p =\n", delta_p)
+
     # Construct Hessian
     term1 = P_prime.T @ P_prime
     term2 = np.zeros((n, n))
@@ -168,9 +166,6 @@ def h(x):
             term2[i, j] = delta_p @ P_double_prime[i, j]
 
     Wreg_matrix = np.diag(Wreg)  # Convert Wreg to a diagonal matrix
-    print("term1 =\n", term1)
-    print("term2 =\n", term2)
-    print("Wreg_matrix =\n", Wreg_matrix)
 
     Hessian = wtar * (term1 + term2) + Wreg_matrix
 
@@ -207,14 +202,24 @@ if __name__ == "__main__":
     P_double_prime = create_P_double_prime(T_matrices, R_matrices, r, n)
 
     # 6. BFGS optimization & wrapping
-    theta_bfgs = BFGS(theta_vec, alpha, gamma, epsilon, f, g, iter_max=2)
-    result = newtons(theta_bfgs, alpha, gamma, epsilon, f, g, h, iter_max=30)
+    print("Executing BFGS...")
+    theta_bfgs, _ = BFGS(theta_vec, alpha, gamma, epsilon, f, g, iter_max=2)
+    print("Executing Newton's method...")
+    result, _ = newtons(theta_bfgs, alpha, gamma, epsilon, f, g, h, iter_max=30)
     while np.any(result > np.pi):
         result[result > np.pi] -= 2 * np.pi
 
     while np.any(result < -np.pi):
         result[result < -np.pi] += 2 * np.pi
 
-    print("x = ", np.round(result, 6))
+    result = np.round(result, 6)
+    print("x = ", result)
 
-    # 7. Save the output to
+    # Save the output to resources/outputB5.txt
+    resource_dir = sys.argv[1]
+    file_path = resource_dir + '/outputB5.txt'
+
+    with open(file_path, 'w') as file:
+        # Iterate through the array and write each element to the file
+        for value in result:
+            file.write(f'{value}\n')

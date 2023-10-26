@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.spatial.transform import Rotation as R
 
 class Link:
     def __init__(self, position=(1, 0)):
@@ -9,8 +8,7 @@ class Link:
         self.child = None
         self.depth = 0
         self.angle = 0.0
-        self.angle_rest = 0.0
-        self.mesh_mat = np.eye(4)
+        self.angle_rest = 180.0 - self.angle
         self.T = np.zeros((3, 3))
         self.R = np.zeros((3, 3))
 

@@ -1,7 +1,8 @@
 # n-link Inverse Kinematics
+import sys
+
 import numpy as np
 from Link import Link
-from gradient_descent import grad
 from BFGS import BFGS
 
 
@@ -34,12 +35,14 @@ def create_rotation_matrices(link):
 
     return R, R_prime, R_double_prime
 
+
 def compute_p(T_matrices, R_matrices, r, n):
     p_result = np.dot(T_matrices[0], R_matrices[0][0])
     for i in range(1, n):
         p_result = np.dot(p_result, T_matrices[i])
         p_result = np.dot(p_result, R_matrices[i][0])
     return np.dot(p_result, r).T
+
 
 # Compute p_prime for each joint
 def compute_p_prime(T_matrices, R_matrices, r, index, n):
@@ -52,10 +55,12 @@ def compute_p_prime(T_matrices, R_matrices, r, index, n):
         product = np.dot(product, T_matrices[i + 1] if i < n - 1 else np.eye(3))
     return np.dot(product, r)
 
+
 def create_P_prime(T_matrices, R_matrices, r, n):
     P_list = [compute_p_prime(T_matrices, R_matrices, r, i, n) for i in range(n)]
     P_prime_matrix = np.array([p[:2] for p in P_list]).T
     return P_prime_matrix
+
 
 def compute_entry(T_matrices, R_matrices, r, n, i, j):
     product = T_matrices[0]
@@ -77,14 +82,6 @@ def compute_entry(T_matrices, R_matrices, r, n, i, j):
     result = np.dot(product, r)[:2].T
     return result
 
-def create_P_double_prime(T_matrices, R_matrices, r, n):
-    P_double_prime_matrix = np.zeros((2 * n, n))
-    for i in range(n):
-        for j in range(n):
-            entry = compute_entry(T_matrices, R_matrices, r, n, i, j)
-            P_double_prime_matrix[2 * i, j] = entry[0]
-            P_double_prime_matrix[2 * i + 1, j] = entry[1]
-    return P_double_prime_matrix
 
 def f(x):
     # Extract theta values
@@ -109,6 +106,7 @@ def f(x):
     # Calculate objective
     Wreg_matrix = np.diag(Wreg)  # Convert Wreg to a diagonal matrix
     return 0.5 * wtar * delta_p @ delta_p + 0.5 * (theta_vec @ Wreg_matrix @ theta_vec)
+
 
 def g(x):
     # Extract theta values
@@ -135,6 +133,7 @@ def g(x):
     Wreg_matrix = np.diag(Wreg)  # Convert Wreg to a diagonal matrix
     return wtar * delta_p @ P_prime + Wreg_matrix @ theta_vec
 
+
 if __name__ == "__main__":
     n = 10  # Number of links
     r = np.array([1, 0, 1])
@@ -158,26 +157,26 @@ if __name__ == "__main__":
     T_matrices = [translation_matrix(link) for link in links]
     R_matrices = [create_rotation_matrices(link) for link in links]
 
-    # 5. Compute P, P_prime, and P_double_prime
+    # 5. Compute P, P_prime
     p = compute_p(T_matrices, R_matrices, r, n)
-
     P_prime = create_P_prime(T_matrices, R_matrices, r, n)
 
-    P_double_prime = create_P_double_prime(T_matrices, R_matrices, r, n)
-
-    print("f(x) = ", f(theta_vec))
-    print("g(x) = ", g(theta_vec))
-    print("P = ", p)
-    print("P_prime = ", P_prime)
-    print("P_double_prime = ", P_double_prime)
-
-
     # 6. BFGS optimization & wrapping
-    result = BFGS(theta_vec, alpha, gamma, epsilon, f, g, iter_max=150)
+    result, _ = BFGS(theta_vec, alpha, gamma, epsilon, f, g, iter_max=150)
     while np.any(result > np.pi):
         result[result > np.pi] -= 2 * np.pi
 
     while np.any(result < -np.pi):
         result[result < -np.pi] += 2 * np.pi
 
-    print("x = ", np.round(result, 6))
+    result = np.round(result, 6)
+    print("x = ", result)
+
+    # Save the output to resources/outputB4.txt
+    resource_dir = sys.argv[1]
+    file_path = resource_dir + '/outputB4.txt'
+
+    with open(file_path, 'w') as file:
+        # Iterate through the array and write each element to the file
+        for value in result:
+            file.write(f'{value}\n')

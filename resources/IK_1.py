@@ -1,11 +1,8 @@
 import numpy as np
 from Link import Link
-from gradient_descent import grad
 from BFGS import BFGS
 
-wtar = 1e3
-wreg = 1e0
-ptar = np.array([0, 1, 1])
+import sys
 
 link = Link()
 theta = link.get_angle()
@@ -47,12 +44,16 @@ def g(x, link = link):
 
 
 if __name__ == "__main__":
+    wtar = 1e3
+    wreg = 1e0
+    ptar = np.array([0, 1, 1])
+
     epsilon = 1e-6
     alpha = 1.0
     gamma = 0.5
     x = np.array([theta])
 
-    result = BFGS(x, alpha, gamma, epsilon, f, g, iter_max=5)
+    result, _ = BFGS(x, alpha, gamma, epsilon, f, g, iter_max=5)
 
     # wrapping
     while result > np.pi:
@@ -60,4 +61,14 @@ if __name__ == "__main__":
     while result < -np.pi:
         result += 2 * np.pi
 
-    print("x = ", np.round(result, 6))
+    result = np.round(result, 6)
+    print("x = ", result)
+
+    # Save the output to resources/outputB1.txt
+    resource_dir = sys.argv[1]
+    file_path = resource_dir + '/outputB1.txt'
+
+    with open(file_path, 'w') as file:
+        # Iterate through the array and write each element to the file
+        for value in result:
+            file.write(f'{value}\n')
